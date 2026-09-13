@@ -5,6 +5,7 @@
 package academia_artes_barranquilla;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Scanner;
@@ -15,66 +16,80 @@ import java.util.Scanner;
  */
 public class UpdateFile {
 
-    private static final int RECORD = 44;
+    private static final long salto = (2 + 30) + Integer.BYTES + Double.BYTES + 1;
+    private static final long nombreByte = 0;
+    private static final long edadByte = 32;
+    private static final long pesoByte = 36;
+    private static final long estadoByte = 44;
 
     public static void main(String[] args) {
-        RandomAccessFile file;
-        String name = null, surname = null;
-        int age = 0;
 
         try {
-            file = new RandomAccessFile(new File("prueba.txt"), "rw");
+            RandomAccessFile raf = new RandomAccessFile("example.txt", "rw");
+            long cantidadRegistros = raf.length() / salto;
             Scanner sc = new Scanner(System.in);
-            long fileSize = file.length();
-            file.seek(0);
-            long numRecords = fileSize / RECORD;
-            boolean check = true;
+            String input = "";
 
-            while (check == true) {
-                System.out.println("Which person's name do you want to change?");
-                String search = sc.nextLine();
+            input = "si";
+            raf.seek(0); //Pointer al ultimo registro para no sobreescribir
 
-                for (int j = 0; j < numRecords; j++) {
-                    name = file.readUTF();
-                    for (int i = 0; i < 20 - name.length(); i++) {
-                        file.readByte();
-                    }
-                    surname = file.readUTF();
-                    for (int i = 0; i < 20 - surname.length(); i++) {
-                        file.readByte();
-                    }
-                    age = file.readInt();
+            while (input.equalsIgnoreCase("si")) {
+                System.out.println("Cual usuario quieres actualizar?");
+                input = sc.nextLine();
 
-                    if (search.equalsIgnoreCase(name)) {
+                for (int i = 1; i <= cantidadRegistros; i++) {
 
-                        System.out.println("Name : " + name + " Surname : " + surname + " Age: " + age);
-                        System.out.println("What is the new name you wish to change?");
-                        search = sc.nextLine();
-                        String newName = search;
+                    raf.seek(salto * (i - 1) + estadoByte);
+                    boolean check = raf.readBoolean();// Activo o Inactivo
+                    raf.seek(salto * (i - 1));
+                    String nombre = raf.readUTF();
 
-                        System.out.println("Are you sure you want to change " + name + " to " + search + "?");
-                        search = sc.nextLine().toLowerCase();
-                        if (search.equalsIgnoreCase("yes")) {
-                            file.seek(44 + j * RECORD);
-                            file.writeUTF(newName);
-                            System.out.println("Name : " + newName + " Surname : " + surname + " Age: " + age);
+                    if (nombre.trim().equalsIgnoreCase(input.trim()) && check) {
+                        System.out.println("Que deseas cambiar?");
+                        input = sc.nextLine();
+                        switch (input.trim()) {
+                            case "nombre":
+                                raf.seek(salto * (i - 1));
+                                System.out.println("Cual sera su nuevo nombre?");
+                                input = sc.nextLine();
+                                raf.writeUTF(String.format("%-30.30s", input));
+                                raf.seek(salto * (i - 1));
+                                System.out.println("Nuevo nombre: " + raf.readUTF());
+                                break;
+                            case "edad":
+                                raf.seek(salto * (i - 1) + edadByte);
+                                System.out.println("Cual sera su nueva edad?");
+                                input = sc.nextLine();
+                                raf.writeInt(Integer.parseInt(input));
+                                raf.seek(salto * (i - 1) + edadByte);
+                                System.out.println("Nueva edad: " + raf.readInt());
+                                break;
+                            case "peso":
+                                raf.seek(salto * (i - 1) + pesoByte);
+                                System.out.println("Cual sera su nueva edad?");
+                                input = sc.nextLine();
+                                raf.writeDouble(Double.parseDouble(input));
+                                raf.seek(salto * (i - 1) + pesoByte);
+                                System.out.println("Nuevo peso: " + raf.readDouble());
+                                break;
                         }
+                        raf.seek(salto * (i - 1));
+                        System.out.println(raf.readUTF());
+                        System.out.println(raf.readInt() + "");
+                        System.out.println(raf.readDouble());
+                        break;
+                    } else if (i == cantidadRegistros) {
+                        System.out.println("No se encontro el usuario " + input + " en el sistema.");
                     }
-
                 }
-
-                System.out.println("Do you wish to change another name?");
-                search = sc.nextLine();
-                if (search.equalsIgnoreCase("no")) {
-                    check = false;
-                }
-
+                System.out.println("Desea leer otro usuario?");
+                input = sc.nextLine();
             }
-            file.close();
 
+        } catch (FileNotFoundException ex) {
+            System.getLogger(WriteFile.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
         } catch (IOException ex) {
             ex.printStackTrace();
-            System.out.println("Error al leer el archivo");
         }
     }
 }

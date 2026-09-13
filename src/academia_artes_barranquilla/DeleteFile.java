@@ -5,6 +5,7 @@
 package academia_artes_barranquilla;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Scanner;
@@ -15,61 +16,52 @@ import java.util.Scanner;
  */
 public class DeleteFile {
 
-    private static final int RECORD = 44;
+    private static final long salto = (2 + 30) + Integer.BYTES + Double.BYTES + 1;
 
     public static void main(String[] args) {
-        RandomAccessFile file;
-        String name = null, surname = null;
-        int age = 0;
-
         try {
-            file = new RandomAccessFile(new File("prueba.txt"), "rw");
+            RandomAccessFile raf = new RandomAccessFile("example.txt", "rw");
+            long cantidadRegistros = raf.length() / salto;
             Scanner sc = new Scanner(System.in);
-            long fileSize = file.length();
-            file.seek(0);
-            long numRecords = fileSize / RECORD;
-            boolean check = true;
+            String input = "";
 
-            while (check == true) {
-                System.out.println("Which person's name do you want to change?");
-                String search = sc.nextLine();
+            input = "si";
+            raf.seek(0); //Pointer al ultimo registro para no sobreescribir
 
-                for (int j = 0; j < numRecords; j++) {
-                    name = file.readUTF();
-                    for (int i = 0; i < 20 - name.length(); i++) {
-                        file.readByte();
-                    }
-                    surname = file.readUTF();
-                    for (int i = 0; i < 20 - surname.length(); i++) {
-                        file.readByte();
-                    }
-                    age = file.readInt();
+            while (input.equalsIgnoreCase("si")) {
+                System.out.println("Cual usuario quieres buscar?");
+                input = sc.nextLine();
 
-                    if (search.equalsIgnoreCase(name)) {
+                for (int i = 1; i <= cantidadRegistros; i++) {
 
-                        System.out.println("Name : " + name + " Surname : " + surname + " Age: " + age);
-                        System.out.println("Are you sure you want to delete?");
-                        search = sc.nextLine().toLowerCase();
-                        if (search.equalsIgnoreCase("yes")) {
-                            file.seek(j * RECORD);
-                            file.setLength(fileSize - 48);
+                    raf.seek(salto * (i - 1) + 44);
+                    boolean check = raf.readBoolean();// Activo o Inactivo
+                    raf.seek(salto * (i - 1));
+
+                    String nombre = raf.readUTF();
+                    if (nombre.trim().equalsIgnoreCase(input.trim()) && check) {
+                        System.out.println("Seguro que quieres eliminar el registro de " + nombre);
+                        input = sc.nextLine();
+                        if (input.equalsIgnoreCase("si")) {
+                            raf.seek(salto * (i - 1) + 44);
+                            raf.writeBoolean(false);
+                            System.out.println("Usuario " + nombre + " eliminado");
+                        } else {
+                            break;
                         }
+                        break;
+                    } else if (i == cantidadRegistros) {
+                        System.out.println("No se encontro el usuario " + input + " en el sistema.");
                     }
-
                 }
-
-                System.out.println("Do you wish to change another name?");
-                search = sc.nextLine();
-                if (search.equalsIgnoreCase("no")) {
-                    check = false;
-                }
-
+                System.out.println("Desea leer otro usuario?");
+                input = sc.nextLine();
             }
-            file.close();
 
+        } catch (FileNotFoundException ex) {
+            System.getLogger(WriteFile.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
         } catch (IOException ex) {
             ex.printStackTrace();
-            System.out.println("Error al leer el archivo");
         }
     }
 }
