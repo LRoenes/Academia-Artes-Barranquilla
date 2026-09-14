@@ -17,9 +17,9 @@ public class ControlInstructor {
 
     private RandomAccessFile raf;
     private HashMap<Long, Long> indice;
-    private static final String fileName = "";
+    private static final String fileName = "instructor.txt";
 
-    public void GestorInstructores() throws IOException {
+    public ControlInstructor() throws IOException {
         this.raf = new RandomAccessFile(fileName, "rw");
         this.indice = new HashMap<>();
         construirIndice();

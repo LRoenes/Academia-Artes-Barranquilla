@@ -17,9 +17,9 @@ public class ControlAprendiz {
 
     private RandomAccessFile raf;
     private HashMap<Long, Long> indice;
-    private static final String fileName = "";
+    private static final String fileName = "aprendiz.txt";
 
-    public void GestorInstructores() throws IOException {
+    public ControlAprendiz() throws IOException {
         this.raf = new RandomAccessFile(fileName, "rw");
         this.indice = new HashMap<>();
         construirIndice();
@@ -93,5 +93,31 @@ public class ControlAprendiz {
 
     public void cerrar() throws IOException {
         raf.close();
+    }
+    
+    public boolean incrementarSesion(long cedula, String especialidad) throws IOException {
+        Aprendiz a = buscarPorCedula(cedula);
+        if (a == null) {
+            System.out.println("Aprendiz no encontrado.");
+            return false;
+        }
+
+        int slot = a.buscarSlotEspecialidad(especialidad);
+        if (slot == -1) {
+            slot = a.buscarSlotLibre();
+            if (slot == -1) {
+                System.out.println("El aprendiz ya tiene 4 especialidades distintas.");
+                return false;
+            }
+        }
+
+        if (a.getContador(slot) >= 4) {
+            System.out.println("Ya alcanzó el máximo de sesiones en esa especialidad.");
+            return false;
+        }
+
+        a.incrementarContador(slot, especialidad); // asigna la especialidad si el slot estaba vacío, y suma 1
+        actualizar(a);
+        return true;
     }
 }

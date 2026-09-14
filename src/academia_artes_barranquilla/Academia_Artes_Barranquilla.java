@@ -20,16 +20,15 @@ import java.util.Scanner;
  * @author Luis
  */
 public class Academia_Artes_Barranquilla {
-    
-    
+
     private Sesion sesion;
 
     public Academia_Artes_Barranquilla(Sesion sesion) {
         this.sesion = sesion;
     }
-    
-    public static void main(String[] args) {
-        
+
+    public static void main(String[] args) throws IOException {
+
     }
-    
+
 }

@@ -13,8 +13,8 @@ import java.io.RandomAccessFile;
  */
 public class Instructor {
 
-    public static final String fileName = "";
-    public static final long TAMAÑO_REGISTRO = (30*2) + 8 + (30*2) + (30*2) + 4 + 1;
+    public static final String fileName = "instructor.txt";
+    public static final long TAMAÑO_REGISTRO = (30 * 2) + 8 + (30 * 2) + (30 * 2) + 4 + 1;
 
     private String nombre;
     private long cedula;
@@ -80,21 +80,19 @@ public class Instructor {
         this.estado = estado;
     }
 
-    
-    
     public static void main(String[] args) {
         System.out.println("HolaS");
     }
 
     public void escribirInstructor(RandomAccessFile raf) {
-        try{
-            raf.seek(raf.length());
-            raf.writeUTF(String.format("%-30.30s", this.nombre));
+        try {
+            raf.writeChars(String.format("%-30.30s", this.nombre));
             raf.writeLong(this.cedula);
-            raf.writeUTF(String.format("%-30.30s", this.telefono));
-            raf.writeUTF(String.format("%-30.30s", this.especialidad));
+            raf.writeChars(String.format("%-30.30s", this.telefono));
+            raf.writeChars(String.format("%-30.30s", this.especialidad));
             raf.writeInt(this.sesionesRealizadas);
-            raf.close();
+            raf.writeBoolean(true);
+
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -104,10 +102,10 @@ public class Instructor {
         Instructor I = null;
         try {
             raf.seek(posicion);
-            String nombre = raf.readUTF().trim();
+            String nombre = leerCadenaFija(raf, 30);
             long cedula = raf.readLong();
-            String telefono = raf.readUTF().trim();
-            String especialidad = raf.readUTF().trim();
+            String telefono = leerCadenaFija(raf, 30);
+            String especialidad = leerCadenaFija(raf, 30);
             int sesionesRealizadas = raf.readInt();
             boolean estado = raf.readBoolean();
             I = new Instructor(nombre, cedula, telefono, especialidad, sesionesRealizadas, estado);
@@ -116,6 +114,14 @@ public class Instructor {
             ex.printStackTrace();
         }
         return I;
+    }
+
+    private static String leerCadenaFija(RandomAccessFile raf, int longitud) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < longitud; i++) {
+            sb.append(raf.readChar());
+        }
+        return sb.toString().trim();
     }
 
 }

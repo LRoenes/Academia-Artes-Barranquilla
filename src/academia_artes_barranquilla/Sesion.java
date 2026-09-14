@@ -14,8 +14,15 @@ import java.io.RandomAccessFile;
  */
 public class Sesion {
 
-    public static final String fileName = "";
-
+    public static final String fileName = "sesiones.txt";
+    public static final long TAMAÑO_REGISTRO = 
+    8 +           // codigoSesion (long)
+    8 +           // instructorCedula (long)
+    (30 * 2) +    // nombreInstructor
+    8 +           // aprendizCedula (long)
+    (30 * 2) +    // nombreAprendiz
+    (30 * 2) +    // especialidad
+    (30 * 2);     // fecha
     private long codigoSesion;
     private String nombreAprendiz;
     private long aprendizCedula;
@@ -94,17 +101,16 @@ public class Sesion {
 
     }
 
-    public void escribirSesion() {
-        try (RandomAccessFile raf = new RandomAccessFile(fileName, "rw")) {
+    public void escribirSesion(RandomAccessFile raf) {
+        try {
             raf.seek(raf.length());
             raf.writeLong(this.codigoSesion);
             raf.writeLong(this.instructorCedula);
-            raf.writeUTF(String.format("%-30.30s", this.nombreInstructor));
+            raf.writeChars(String.format("%-30.30s", this.nombreInstructor));
             raf.writeLong(this.aprendizCedula);
-            raf.writeUTF(String.format("%-30.30s", this.nombreAprendiz));
-            raf.writeUTF(String.format("%-30.30s", this.especialidad));
-            raf.writeUTF(String.format("%-30.30s", this.fecha));
-            raf.close();
+            raf.writeChars(String.format("%-30.30s", this.nombreAprendiz));
+            raf.writeChars(String.format("%-30.30s", this.especialidad));
+            raf.writeChars(String.format("%-30.30s", this.fecha));
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -115,19 +121,27 @@ public class Sesion {
         try {
             raf.seek(posicion);
             long codigoSesion = raf.readLong();
-            long cedulaInstructor = raf.readLong();
-            String nombreInstructor = raf.readUTF().trim();
-            Long cedulaAprendiz = raf.readLong();
-            String nombreAprendiz = raf.readUTF().trim();
-            String especialidad = raf.readUTF().trim();
-            String fecha = raf.readUTF().trim();
-            
-            s = new Sesion(codigoSesion, nombreAprendiz, cedulaAprendiz, especialidad, cedulaInstructor, nombreInstructor, fecha);
+            long instructorCedula = raf.readLong();
+            String nombreInstructor = leerCadenaFija(raf, 30);
+            long aprendizCedula = raf.readLong();
+            String nombreAprendiz = leerCadenaFija(raf, 30);
+            String especialidad = leerCadenaFija(raf, 30);
+            String fecha = leerCadenaFija(raf, 30);
+
+            s = new Sesion(codigoSesion, nombreAprendiz, aprendizCedula, especialidad, instructorCedula, nombreInstructor, fecha);
 
         } catch (IOException ex) {
             ex.printStackTrace();
         }
         return s;
+    }
+
+    private static String leerCadenaFija(RandomAccessFile raf, int longitud) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < longitud; i++) {
+            sb.append(raf.readChar());
+        }
+        return sb.toString().trim();
     }
 
 }
